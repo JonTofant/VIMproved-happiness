@@ -48,6 +48,8 @@ Plug 'tibabit/vim-templates'
 Plug'/honza/vim-snippets'
 Plug'puremourning/vimspector'
 Plug 'easymotion/vim-easymotion'
+Plug 'tpope/vim-surround'
+Plug 'kyazdani42/nvim-web-devicons'
 
 call plug#end()
 set termguicolors     " enable true colors support
@@ -63,8 +65,19 @@ let g:airline_theme='gruvbox'
 
 let mapleader = " "
 
-nnoremap <leader>pv :Vex<CR>
-nnoremap <leader>f <cmd>Telescope file_browser<cr>
+"FileTree
+let g:NERDTreeChDirMode = 2
+autocmd VimEnter * NERDTree | wincmd p
+nnoremap <leader>fl <cmd>NERDTree<cr>
+" Exit Vim if NERDTree is the only window left.
+autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() |
+    \ quit | endif
+" If another buffer tries to replace NERDTree, put it in the other window, and bring back NERDTree.
+autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
+    \ let buf=bufnr() | buffer# | execute "normal! \<C-W>w" | execute 'buffer'.buf | endif
+"FileTree end
+
+nnoremap <leader>ff <cmd>Telescope file_browser<cr>
 nnoremap <leader>a <C-w>h
 nnoremap <leader>d <C-w>l
 nnoremap <leader>s <C-w>j
@@ -73,11 +86,7 @@ noremap <leader>1 :w<CR>
 noremap <leader>r <C-^>
 nnoremap <C-c> :!g++ -o  %:r.out % -std=c++11<CR>
 nnoremap <C-x> :!g++ -o  %:r.out % -std=c++11<CR> <bar>:FloatermNew %:r.out<CR>
-nmap <Leader>dd :call vimspector#Lanuch()
-nmap <Leader>di <Plug>VimspectorBalloonEval
-nmap <Leader>dw <Plug>VimspectorWatch
 
-let g:vimspector_enable_mappings = 'HUMAN'
 let g:coc_snippet_next = '<c-l>'
 let g:coc_snippet_prev = '<c-h>'
 "Coc snippets remap to tab
@@ -95,6 +104,55 @@ let g:coc_snippet_prev = '<c-h>'
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 "End of Coc remap
+" telescope script
+
+lua << EOF
+require('telescope').setup{
+  defaults = {
+    vimgrep_arguments = {
+      'rg',
+      '--color=never',
+      '--no-heading',
+      '--with-filename',
+      '--line-number',
+      '--column',
+      '--smart-case'
+    },
+    prompt_prefix = "> ",
+    selection_caret = "> ",
+    entry_prefix = "  ",
+    initial_mode = "insert",
+    selection_strategy = "reset",
+    sorting_strategy = "descending",
+    layout_strategy = "horizontal",
+    layout_config = {
+      horizontal = {
+        mirror = false,
+      },
+      vertical = {
+        mirror = false,
+      },
+    },
+    file_sorter =  require'telescope.sorters'.get_fuzzy_file,
+    file_ignore_patterns = {},
+    generic_sorter =  require'telescope.sorters'.get_generic_fuzzy_sorter,
+    shorten_path = true,
+    winblend = 0,
+    border = {},
+    borderchars = { '─', '│', '─', '│', '╭', '╮', '╯', '╰' },
+    color_devicons = true,
+    use_less = true,
+    set_env = { ['COLORTERM'] = 'truecolor' }, -- default = nil,
+    file_previewer = require'telescope.previewers'.vim_buffer_cat.new,
+    grep_previewer = require'telescope.previewers'.vim_buffer_vimgrep.new,
+    qflist_previewer = require'telescope.previewers'.vim_buffer_qflist.new,
+
+    -- Developer configurations: Not meant for general override
+    buffer_previewer_maker = require'telescope.previewers'.buffer_previewer_maker
+  }
+}
+EOF
+
 let g:startify_custom_header =[
 \ '  ██╗   ██╗██╗███╗   ███╗    ███╗   ███╗ █████╗  ██████╗██╗  ██╗    ██╗  ██╗ ',
 \ '  ██║   ██║██║████╗ ████║    ████╗ ████║██╔══██╗██╔════╝██║  ██║    ╚██╗██╔╝ ',
@@ -103,3 +161,4 @@ let g:startify_custom_header =[
 \ '   ╚████╔╝ ██║██║ ╚═╝ ██║    ██║ ╚═╝ ██║██║  ██║╚██████╗██║  ██║    ██╔╝ ██╗ ',
 \ '    ╚═══╝  ╚═╝╚═╝     ╚═╝    ╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝    ╚═╝  ╚═╝',
 \]
+
